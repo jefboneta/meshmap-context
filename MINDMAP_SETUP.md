@@ -26,7 +26,11 @@ API requests require internet access and may incur charges. The key is stored in
 2. Open the MeshMap desktop shortcut and go to **Settings**.
 3. Choose an existing `.gguf` model and start the local server.
 
-The default local API address is `127.0.0.1:8080`. The model is not included or copied. To have the installer copy a local llama.cpp server runtime, place its `llama-*-bin-win-*` directory beside the installer; the directory must contain `llama-server.exe`. Otherwise, select an existing `llama-server.exe` in Settings.
+The local server binary is required because it loads the GGUF model and provides the HTTP API MeshMap uses. The GGUF file contains model weights; it does not run the model on its own. MeshMap connects to the server at `127.0.0.1:8080` by default.
+
+Download the Windows llama.cpp server build from the [official llama.cpp releases](https://github.com/ggml-org/llama.cpp/releases) and extract the complete archive. Keep `llama-server.exe` together with the DLLs and other runtime files from that archive. To have the installer copy the runtime automatically, place the extracted `llama-*-bin-win-*` folder beside the installer. Otherwise, select `llama-server.exe` in **Settings** and leave its neighboring runtime files in place.
+
+The model file and server binary are not included in this repository. You do not need llama.cpp when using the DeepSeek API installer.
 
 ## Map context
 

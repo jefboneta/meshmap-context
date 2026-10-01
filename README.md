@@ -28,6 +28,8 @@ Requirements: Windows 10 or newer and Python 3.10+. Anaconda is not required. Th
 
 For local mode, the installer can copy `llama-server.exe` and its neighboring runtime files when a matching `llama-*-bin-win-*` folder is placed beside the installer. No model or large runtime binary is bundled in this repository. If you already have `llama-server.exe`, select its path in Settings instead.
 
+The server binary is the program that loads your GGUF model and exposes the local API MeshMap uses at `127.0.0.1:8080`; a GGUF model file by itself cannot serve requests. Download a Windows build from the [official llama.cpp releases](https://github.com/ggml-org/llama.cpp/releases), extract the complete archive, and follow the [local GGUF setup guide](MINDMAP_SETUP.md#local-gguf-model). You do not need this binary when using the DeepSeek API.
+
 ## Setup and privacy
 
 See [MINDMAP_SETUP.md](MINDMAP_SETUP.md) for provider setup, MQTT discovery, privacy details, diagnostics, and troubleshooting.
