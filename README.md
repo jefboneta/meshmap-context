@@ -1,10 +1,10 @@
-# MeshMap Context
+# Farmers' Decentralized Market
 
-**Local-first mind maps with LLM context for Meshtastic projects and other complex work.**
+**A people-first map for local goods. No marketplace boss; just people sharing.**
 
-MeshMap Context turns a branching project map into useful context for an AI assistant. It gives the model the selected node, its path through the map, connected nodes, and comments, so responses stay anchored to the current problem. You remain in control of the map; the assistant suggests, but does not rewrite the tree.
+Organize produce, seeds, tools, and other goods in named groups and nested item maps. Each publisher controls their own map; other people can discover public maps and comment on items. The assistant can use the map context to help organize and describe listings.
 
-The app runs locally in your browser. Choose a local GGUF model through `llama-server`, or use the DeepSeek API. Optional public discovery uses MQTT and is disabled unless you enable it.
+The app runs locally in your browser. Choose a local GGUF model through `llama-server`, or use the DeepSeek API. Public discovery is optional and disabled until enabled.
 
 ## What it does
 
@@ -14,7 +14,7 @@ The app runs locally in your browser. Choose a local GGUF model through `llama-s
 - Optionally publish a read-only snapshot for discovery and comments.
 - Check local model-server health and diagnostics in the app.
 
-The name reflects the app's use for Meshtastic-related planning and knowledge. **This preview does not communicate with Meshtastic radios**; its optional discovery feature uses an MQTT broker over the internet.
+**Network note:** public discovery currently uses a shared MQTT broker and requires credentials. The project is people-led, but its network is not yet fully peer-to-peer or free of network administration. Public maps are visible to other broker subscribers; the app does not process payments or guarantee that listed goods are available.
 
 ## Quick start on Windows
 

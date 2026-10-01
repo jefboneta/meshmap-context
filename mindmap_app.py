@@ -32,8 +32,8 @@ LOG_PATH = DATA_DIR / "llm-server.log"
 DEFAULT_CONFIG = {
     "provider": "local",
     "deepseek_model": "deepseek-flash",
-    "workspace_title": "Phone repair workshop",
-    "workspace_description": "A place to document phone repairs, parts, and service workflows.",
+    "workspace_title": "Farmers' Market",
+    "workspace_description": "A community map for local produce, seeds, tools, and other goods.",
     "publisher_id": "",
     "publish_enabled": False,
     "local_server_exe": "",

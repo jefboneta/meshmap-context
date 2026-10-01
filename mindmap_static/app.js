@@ -135,13 +135,13 @@ function render() {
 
   byId("empty-state").hidden = current.nodes.length > 0;
   byId("map-count").textContent = `${current.nodes.length} nodes · ${current.edges.length} links`;
-  byId("workspace-title-text").textContent = viewedMap?.title || config.workspace_title || "Phone repair workshop";
+  byId("workspace-title-text").textContent = viewedMap?.title || config.workspace_title || "Farmers' Market";
   byId("return-local").hidden = !viewedMap;
   byId("link-mode").hidden = Boolean(viewedMap);
   byId("add-node").disabled = Boolean(viewedMap);
   byId("add-group").disabled = Boolean(viewedMap);
   byId("empty-add").disabled = Boolean(viewedMap);
-  byId("publish-state").textContent = viewedMap ? "Public · Read only" : (config.publish_enabled ? "Publicly discoverable" : "Private workshop");
+  byId("publish-state").textContent = viewedMap ? "Public · Read only" : (config.publish_enabled ? "Publicly discoverable" : "Private map");
   byId("board-hint").textContent = linking ? (linkSource ? "Choose the node this relationship points to" : "Choose the starting node") : "Select a node to inspect it";
   renderInspector();
 }
@@ -307,7 +307,7 @@ function renderInspector() {
         .then((result) => { viewedMap.comments.push(result.comment); render(); })
         .catch((error) => notify(error.message));
     } else {
-      graph.comments.push({ id: crypto.randomUUID(), nodeId: node.id, text, createdAt: new Date().toISOString(), author: "Workshop owner" });
+      graph.comments.push({ id: crypto.randomUUID(), nodeId: node.id, text, createdAt: new Date().toISOString(), author: "Map owner" });
       saveGraph();
       render();
     }
@@ -368,7 +368,7 @@ function setProviderFields() {
 
 function openSettings() {
   document.querySelector(`input[name="provider"][value="${config.provider || "local"}"]`).checked = true;
-  byId("workspace-title-input").value = config.workspace_title || "Phone repair workshop";
+  byId("workspace-title-input").value = config.workspace_title || "Farmers' Market";
   byId("workspace-description-input").value = config.workspace_description || "";
   byId("publish-enabled").checked = Boolean(config.publish_enabled);
   byId("deepseek-model").value = config.deepseek_model || "deepseek-flash";

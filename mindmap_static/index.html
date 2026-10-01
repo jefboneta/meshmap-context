@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MeshMap</title>
+  <title>Farmers' Decentralized Market</title>
   <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
   <header class="topbar">
-    <a class="wordmark" href="/" aria-label="MeshMap home"><span class="mark">M</span><span>meshmap</span></a>
-    <button id="workspace-open" class="workspace-title"><span class="eyebrow">WORKSHOP / PROJECT</span><strong id="workspace-title-text">Phone repair workshop</strong></button>
+    <a class="wordmark" href="/" aria-label="Farmers' market home"><span class="mark">F</span><span>farmers' market</span></a>
+    <button id="workspace-open" class="workspace-title"><span class="eyebrow">MARKET MAP</span><strong id="workspace-title-text">Farmers' Market</strong></button>
     <div class="top-actions">
       <span id="provider-pill" class="provider-pill"><span class="status-dot"></span><span>Checking AI</span></span>
       <span id="network-pill" class="network-pill" title="Public discovery network"><span class="status-dot"></span><span>Network offline</span></span>
@@ -19,10 +19,10 @@
   </header>
   <main class="layout">
     <aside class="side-panel map-panel">
-      <div class="panel-heading"><div><span class="eyebrow">YOUR MAP</span><h1>Structure</h1></div><div class="structure-actions"><button id="add-group" class="toolbar-button">+ Group</button><button id="add-node" class="primary-button">+ Node</button></div></div>
+      <div class="panel-heading"><div><span class="eyebrow">PEOPLE-LED MARKET</span><h1>Farmers' Market</h1></div><div class="structure-actions"><button id="add-group" class="toolbar-button">+ Group</button><button id="add-node" class="primary-button">+ Node</button></div></div>
       <label class="search-box"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Find a node"></label>
       <div id="node-list" class="node-list"></div>
-      <div class="panel-foot"><span id="map-count">0 nodes · 0 links</span><span id="publish-state" class="local-badge">Private workshop</span></div>
+      <div class="panel-foot"><span id="map-count">0 nodes · 0 links</span><span id="publish-state" class="local-badge">Private map</span></div>
     </aside>
     <section class="board-wrap" aria-label="Mind map canvas">
       <div class="board-toolbar">
@@ -31,7 +31,7 @@
       </div>
       <div id="board" class="board">
         <svg id="edges-layer" class="edges-layer" aria-label="Node relationships"></svg>
-        <div id="empty-state" class="empty-state"><div class="empty-glyph">○<span>+</span></div><h2>Start with one useful idea</h2><p>Add a node, describe what it contains, then connect it to the next step.</p><button id="empty-add" class="primary-button">Create first node</button></div>
+        <div id="empty-state" class="empty-state"><div class="empty-glyph">○<span>+</span></div><h2>Start your market map</h2><p>Organize produce, seeds, tools, and other goods. No marketplace boss; people share their own maps.</p><button id="empty-add" class="primary-button">Add first item</button></div>
         <div id="nodes-layer" class="nodes-layer"></div>
       </div>
     </section>
