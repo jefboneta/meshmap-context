@@ -43,7 +43,7 @@ DEFAULT_CONFIG = {
     "context_size": 4096,
     "gpu_layers": 99,
 }
-DEFAULT_GRAPH = {"nodes": [], "edges": [], "comments": []}
+DEFAULT_GRAPH = {"nodes": [], "edges": [], "groups": [], "comments": []}
 app = Flask(__name__, static_folder="mindmap_static", static_url_path="/static")
 server_process = None
 server_lock = threading.Lock()
@@ -104,8 +104,16 @@ def receive_network_map(owner_id, payload):
             return
         graph = payload.get("graph")
         if (not isinstance(graph, dict) or
-                any(not isinstance(graph.get(key, []), list) for key in ("nodes", "edges"))):
+            any(not isinstance(graph.get(key, []), list) for key in ("nodes", "edges", "groups"))):
             return
+        groups = []
+        for item in graph.get("groups", [])[:100]:
+            if not isinstance(item, dict) or not isinstance(item.get("id"), str):
+                continue
+            name = str(item.get("name", "")).strip()[:80]
+            if name:
+                groups.append({"id": item["id"][:80], "name": name})
+        group_ids = {group["id"] for group in groups}
         nodes = []
         for item in graph.get("nodes", [])[:500]:
             if not isinstance(item, dict) or not isinstance(item.get("id"), str):
@@ -113,9 +121,17 @@ def receive_network_map(owner_id, payload):
             x, y = item.get("x", 30), item.get("y", 30)
             x = min(1800, max(0, x)) if isinstance(x, (int, float)) and math.isfinite(x) else 30
             y = min(1300, max(0, y)) if isinstance(y, (int, float)) and math.isfinite(y) else 30
-            nodes.append({"id": item["id"][:80], "name": str(item.get("name", "Untitled node"))[:120],
-                          "description": str(item.get("description", ""))[:2000], "x": x, "y": y})
+            node = {"id": item["id"][:80], "name": str(item.get("name", "Untitled node"))[:120],
+                    "description": str(item.get("description", ""))[:2000], "x": x, "y": y}
+            if isinstance(item.get("parentId"), str):
+                node["parentId"] = item["parentId"][:80]
+            if isinstance(item.get("groupId"), str) and item["groupId"] in group_ids:
+                node["groupId"] = item["groupId"][:80]
+            nodes.append(node)
         valid_ids = {node["id"] for node in nodes}
+        for node in nodes:
+            if node.get("parentId") not in valid_ids:
+                node.pop("parentId", None)
         edges = []
         for edge in graph.get("edges", [])[:1000]:
             if not isinstance(edge, dict):
@@ -123,7 +139,7 @@ def receive_network_map(owner_id, payload):
             source, target = edge.get("source"), edge.get("target")
             if isinstance(source, str) and isinstance(target, str) and source in valid_ids and target in valid_ids:
                 edges.append({"source": source, "target": target, "label": str(edge.get("label", ""))[:200]})
-        graph["nodes"], graph["edges"] = nodes, edges
+        graph["nodes"], graph["edges"], graph["groups"] = nodes, edges, groups
         payload["title"] = str(payload.get("title", "Untitled map"))[:120]
         payload["description"] = str(payload.get("description", ""))[:2000]
         payload["owner_id"] = owner_id
@@ -217,7 +233,7 @@ def publish_public_map():
         "title": str(config.get("workspace_title", "My workshop"))[:120],
         "description": str(config.get("workspace_description", ""))[:2000],
         "updated_at": time.time(),
-        "graph": {"nodes": graph["nodes"], "edges": graph["edges"]},
+        "graph": {"nodes": graph["nodes"], "edges": graph["edges"], "groups": graph["groups"]},
     }
     encoded = json.dumps(public_map, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     if len(encoded) > MAX_PAYLOAD_BYTES:
@@ -504,7 +520,8 @@ def chat():
             "selected_node_context": selected_context,
             "comments": (selected_context["comments_on_path"] if selected_context
                          else graph["comments"][-100:]),
-            "map_structure": {"nodes": graph["nodes"], "edges": graph["edges"]},
+            "map_structure": {"nodes": graph["nodes"], "edges": graph["edges"],
+                              "groups": graph.get("groups", [])},
         }
         map_context = json.dumps(context, ensure_ascii=False)[:24000]
         answer = chat_completion([
@@ -687,7 +704,7 @@ def get_network_map(owner_id):
             "owner_id": owner_id,
             "title": config["workspace_title"],
             "description": config["workspace_description"],
-            "graph": {"nodes": graph["nodes"], "edges": graph["edges"]},
+            "graph": {"nodes": graph["nodes"], "edges": graph["edges"], "groups": graph["groups"]},
         }
     result = dict(public_map)
     result["comments"] = comments

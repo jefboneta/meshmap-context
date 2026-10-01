@@ -19,7 +19,7 @@
   </header>
   <main class="layout">
     <aside class="side-panel map-panel">
-      <div class="panel-heading"><div><span class="eyebrow">YOUR MAP</span><h1>Structure</h1></div><button id="add-node" class="primary-button">+ Add node</button></div>
+      <div class="panel-heading"><div><span class="eyebrow">YOUR MAP</span><h1>Structure</h1></div><div class="structure-actions"><button id="add-group" class="toolbar-button">+ Group</button><button id="add-node" class="primary-button">+ Node</button></div></div>
       <label class="search-box"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Find a node"></label>
       <div id="node-list" class="node-list"></div>
       <div class="panel-foot"><span id="map-count">0 nodes · 0 links</span><span id="publish-state" class="local-badge">Private workshop</span></div>
@@ -52,7 +52,17 @@
       <div class="modal-heading"><div><span class="eyebrow">MAP STRUCTURE</span><h2 id="node-dialog-title">Add a node</h2></div><button class="icon-button close-dialog" aria-label="Close">×</button></div>
       <label>Node name<input id="node-name" required maxlength="120" placeholder="e.g. Samsung screen replacement"></label>
       <label>Description and meaning<textarea id="node-description" rows="4" maxlength="2000" placeholder="What information belongs here? How does it relate to the next step?"></textarea></label>
+      <label>Group<select id="node-group"><option value="">Ungrouped</option></select></label>
+      <p id="node-parent-note" class="field-note" hidden></p>
       <div class="modal-actions"><button type="button" class="quiet-button close-dialog">Cancel</button><button id="save-node" class="primary-button" value="save">Save node</button></div>
+    </form>
+  </dialog>
+  <dialog id="group-dialog" class="modal">
+    <form id="group-form" method="dialog">
+      <div class="modal-heading"><div><span class="eyebrow">MAP STRUCTURE</span><h2>Create a group</h2></div><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div>
+      <label>Group name<input id="group-name" required maxlength="80" placeholder="e.g. Screens and displays"></label>
+      <p class="field-note">Choose this group when adding or editing a node to organize it in the list.</p>
+      <div class="modal-actions"><button type="button" class="quiet-button close-dialog">Cancel</button><button class="primary-button" value="save">Create group</button></div>
     </form>
   </dialog>
   <dialog id="settings-dialog" class="modal settings-modal">

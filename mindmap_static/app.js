@@ -8,10 +8,11 @@ const api = async (path, options = {}) => {
   return result;
 };
 
-const graph = { nodes: [], edges: [], comments: [] };
+const graph = { nodes: [], edges: [], groups: [], comments: [] };
 let config = {};
 let selectedId = null;
 let editingId = null;
+let parentIdOnCreate = null;
 let linking = false;
 let linkSource = null;
 let semanticEnabled = false;
@@ -62,13 +63,37 @@ function render() {
   layer.replaceChildren();
   svg.replaceChildren();
 
-  current.nodes.forEach((node) => {
-    if (!query || `${node.name} ${node.description}`.toLowerCase().includes(query)) {
+  const visibleNodes = current.nodes.filter((node) => !query || `${node.name} ${node.description}`.toLowerCase().includes(query));
+  const visibleIds = new Set(visibleNodes.map((node) => node.id));
+  const groups = current.groups || [];
+  [...groups, { id: "", name: "Ungrouped" }].forEach((group) => {
+    const groupNodes = visibleNodes.filter((node) => (node.groupId || "") === group.id);
+    if (!groupNodes.length && !group.id) return;
+    const section = el("section", "node-group");
+    const heading = el("div", "node-group-heading");
+    heading.append(el("strong", "", group.name), el("small", "", String(groupNodes.length)));
+    section.append(heading);
+    const nodesById = new Map(groupNodes.map((node) => [node.id, node]));
+    const childrenById = new Map();
+    groupNodes.forEach((node) => {
+      if (!nodesById.has(node.parentId)) return;
+      if (!childrenById.has(node.parentId)) childrenById.set(node.parentId, []);
+      childrenById.get(node.parentId).push(node);
+    });
+    const rendered = new Set();
+    const appendNode = (node, depth = 0) => {
+      if (rendered.has(node.id)) return;
+      rendered.add(node.id);
       const item = el("div", `node-list-item${selectedId === node.id ? " selected" : ""}`);
+      item.style.paddingLeft = `${10 + Math.min(depth, 4) * 13}px`;
       item.append(el("strong", "", node.name), el("small", "", node.description || "No description yet"));
       item.addEventListener("click", () => { selectedId = node.id; render(); });
-      list.append(item);
-    }
+      section.append(item);
+      (childrenById.get(node.id) || []).forEach((child) => appendNode(child, depth + 1));
+    };
+    groupNodes.filter((node) => !visibleIds.has(node.parentId) || !nodesById.has(node.parentId)).forEach((node) => appendNode(node));
+    groupNodes.forEach((node) => appendNode(node));
+    list.append(section);
   });
 
   const ns = "http://www.w3.org/2000/svg";
@@ -114,6 +139,7 @@ function render() {
   byId("return-local").hidden = !viewedMap;
   byId("link-mode").hidden = Boolean(viewedMap);
   byId("add-node").disabled = Boolean(viewedMap);
+  byId("add-group").disabled = Boolean(viewedMap);
   byId("empty-add").disabled = Boolean(viewedMap);
   byId("publish-state").textContent = viewedMap ? "Public · Read only" : (config.publish_enabled ? "Publicly discoverable" : "Private workshop");
   byId("board-hint").textContent = linking ? (linkSource ? "Choose the node this relationship points to" : "Choose the starting node") : "Select a node to inspect it";
@@ -218,13 +244,16 @@ function renderInspector() {
   const titleGroup = document.createElement("div");
   titleGroup.append(el("span", "eyebrow", "NODE DETAILS"), el("h2", "", node.name));
   const actions = el("div", "detail-actions");
+  const addChild = el("button", "small-action", "Add child");
+  addChild.type = "button";
+  addChild.addEventListener("click", () => openNodeDialog(null, node));
   const edit = el("button", "small-action", "Edit");
   edit.type = "button";
   edit.addEventListener("click", () => openNodeDialog(node));
   const remove = el("button", "small-action", "Delete");
   remove.type = "button";
   remove.addEventListener("click", () => deleteNode(node));
-  if (!viewedMap) actions.append(edit, remove);
+  if (!viewedMap) actions.append(addChild, edit, remove);
   titleRow.append(titleGroup, actions);
   content.append(titleRow, el("p", "detail-description", node.description || "No description has been added."));
   const reviewPath = el("button", "small-action path-review", "Ask how this path could be better");
@@ -302,11 +331,19 @@ async function checkSemantic(edge) {
   }
 }
 
-function openNodeDialog(node = null) {
+function openNodeDialog(node = null, parentNode = null) {
   editingId = node?.id || null;
-  byId("node-dialog-title").textContent = node ? "Edit node" : "Add a node";
+  parentIdOnCreate = node ? null : (parentNode?.id || null);
+  byId("node-dialog-title").textContent = node ? "Edit node" : (parentNode ? "Add a child node" : "Add a node");
   byId("node-name").value = node?.name || "";
   byId("node-description").value = node?.description || "";
+  const groupSelect = byId("node-group");
+  groupSelect.replaceChildren(new Option("Ungrouped", ""));
+  (graph.groups || []).forEach((group) => groupSelect.add(new Option(group.name, group.id)));
+  groupSelect.value = node?.groupId || parentNode?.groupId || "";
+  const parentNote = byId("node-parent-note");
+  parentNote.hidden = !parentNode;
+  parentNote.textContent = parentNode ? `This node will be added under “${parentNode.name}”.` : "";
   byId("node-dialog").showModal();
   byId("node-name").focus();
 }
@@ -314,6 +351,7 @@ function openNodeDialog(node = null) {
 function deleteNode(node) {
   if (!window.confirm(`Delete “${node.name}” and its relationships? Comments will remain in saved data.`)) return;
   graph.nodes = graph.nodes.filter((item) => item.id !== node.id);
+  graph.nodes.forEach((item) => { if (item.parentId === node.id) item.parentId = null; });
   graph.edges = graph.edges.filter((edge) => edge.source !== node.id && edge.target !== node.id);
   selectedId = null;
   saveGraph();
@@ -479,6 +517,7 @@ async function init() {
     const [loadedGraph, loadedSettings] = await Promise.all([api("/api/graph"), api("/api/settings")]);
     graph.nodes = loadedGraph.nodes || [];
     graph.edges = loadedGraph.edges || [];
+    graph.groups = loadedGraph.groups || [];
     graph.comments = loadedGraph.comments || [];
     config = loadedSettings;
     byId("provider-pill").dataset.provider = config.provider || "local";
@@ -494,17 +533,47 @@ async function init() {
 
 byId("add-node").addEventListener("click", () => openNodeDialog());
 byId("empty-add").addEventListener("click", () => openNodeDialog());
+byId("add-group").addEventListener("click", () => {
+  byId("group-name").value = "";
+  byId("group-dialog").showModal();
+  byId("group-name").focus();
+});
+byId("group-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const name = byId("group-name").value.trim();
+  if (!name) return;
+  if ((graph.groups || []).some((group) => group.name.toLowerCase() === name.toLowerCase())) {
+    notify("A group with that name already exists.");
+    return;
+  }
+  graph.groups.push({ id: crypto.randomUUID(), name });
+  saveGraph();
+  byId("group-dialog").close();
+  render();
+  notify(`Group “${name}” created. Choose it when adding a node.`);
+});
 byId("node-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const name = byId("node-name").value.trim();
   if (!name) return;
-  const values = { name, description: byId("node-description").value.trim() };
+  const groupId = byId("node-group").value || null;
+  const values = { name, description: byId("node-description").value.trim(), groupId };
   if (editingId) Object.assign(nodeById(editingId), values);
-  else graph.nodes.push({ id: crypto.randomUUID(), ...values, ...centerPosition() });
+  else {
+    const parent = parentIdOnCreate ? nodeById(parentIdOnCreate) : null;
+    const position = parent ? {
+      x: parent.x + 260 <= 1550 ? parent.x + 260 : Math.max(30, parent.x - 260),
+      y: Math.min(1180, parent.y + 100),
+    } : centerPosition();
+    const child = { id: crypto.randomUUID(), ...values, parentId: parent?.id || null, ...position };
+    graph.nodes.push(child);
+    if (parent) graph.edges.push({ id: crypto.randomUUID(), source: parent.id, target: child.id, label: "contains" });
+  }
   saveGraph();
   byId("node-dialog").close();
   selectedId = editingId || graph.nodes[graph.nodes.length - 1].id;
   editingId = null;
+  parentIdOnCreate = null;
   render();
 });
 byId("link-mode").addEventListener("click", () => {
