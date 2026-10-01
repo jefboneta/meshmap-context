@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MeshMap</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="wordmark" href="/" aria-label="MeshMap home"><span class="mark">M</span><span>meshmap</span></a>
+    <button id="workspace-open" class="workspace-title"><span class="eyebrow">WORKSHOP / PROJECT</span><strong id="workspace-title-text">Phone repair workshop</strong></button>
+    <div class="top-actions">
+      <span id="provider-pill" class="provider-pill"><span class="status-dot"></span><span>Checking AI</span></span>
+      <span id="network-pill" class="network-pill" title="Public discovery network"><span class="status-dot"></span><span>Network offline</span></span>
+      <button id="discover-open" class="quiet-button" aria-label="Discover public maps" title="Discover public maps">Discover maps</button>
+      <button id="settings-open" class="icon-button" title="Settings" aria-label="Settings">⚙</button>
+    </div>
+  </header>
+  <main class="layout">
+    <aside class="side-panel map-panel">
+      <div class="panel-heading"><div><span class="eyebrow">YOUR MAP</span><h1>Structure</h1></div><button id="add-node" class="primary-button">+ Add node</button></div>
+      <label class="search-box"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Find a node"></label>
+      <div id="node-list" class="node-list"></div>
+      <div class="panel-foot"><span id="map-count">0 nodes · 0 links</span><span id="publish-state" class="local-badge">Private workshop</span></div>
+    </aside>
+    <section class="board-wrap" aria-label="Mind map canvas">
+      <div class="board-toolbar">
+        <div class="toolbar-group"><button id="fit-map" class="toolbar-button" title="Fit map">Fit map</button><button id="link-mode" class="toolbar-button" title="Create a relationship">Link nodes</button><button id="return-local" class="toolbar-button" hidden>Return to my map</button></div>
+        <div class="toolbar-hint" id="board-hint">Select a node to inspect it</div>
+      </div>
+      <div id="board" class="board">
+        <svg id="edges-layer" class="edges-layer" aria-label="Node relationships"></svg>
+        <div id="empty-state" class="empty-state"><div class="empty-glyph">○<span>+</span></div><h2>Start with one useful idea</h2><p>Add a node, describe what it contains, then connect it to the next step.</p><button id="empty-add" class="primary-button">Create first node</button></div>
+        <div id="nodes-layer" class="nodes-layer"></div>
+      </div>
+    </section>
+    <aside class="side-panel detail-panel">
+      <section id="inspector" class="inspector">
+        <div class="blank-inspector"><span class="eyebrow">NODE DETAILS</span><div class="blank-mark">↗</div><p>Select a node on the map to view its description, relationships, and comments.</p></div>
+      </section>
+      <section class="assistant-panel">
+        <div class="assistant-heading"><div class="assistant-mark">✳</div><div><span class="eyebrow">LOCAL TO THIS PC</span><h2>Map assistant</h2></div><button id="diagnostics-open" class="quiet-button" title="Local server diagnostics">Diagnostics</button></div>
+        <div id="chat-log" class="chat-log"><p class="assistant-note">Ask a question about your map or get help drafting a relationship.</p></div>
+        <form id="chat-form" class="chat-form"><textarea id="chat-input" rows="2" placeholder="Ask about your map…" aria-label="Message the map assistant"></textarea><button type="submit" class="send-button" title="Send message" aria-label="Send message">↑</button></form>
+        <div class="assistant-status"><span id="assistant-status">Assistant ready</span><button id="semantic-toggle" class="toggle-button" type="button" aria-pressed="false"><span class="toggle-track"><i></i></span><span>Semantic checks</span></button></div>
+      </section>
+    </aside>
+  </main>
+  <dialog id="node-dialog" class="modal">
+    <form id="node-form" method="dialog">
+      <div class="modal-heading"><div><span class="eyebrow">MAP STRUCTURE</span><h2 id="node-dialog-title">Add a node</h2></div><button class="icon-button close-dialog" aria-label="Close">×</button></div>
+      <label>Node name<input id="node-name" required maxlength="120" placeholder="e.g. Samsung screen replacement"></label>
+      <label>Description and meaning<textarea id="node-description" rows="4" maxlength="2000" placeholder="What information belongs here? How does it relate to the next step?"></textarea></label>
+      <div class="modal-actions"><button type="button" class="quiet-button close-dialog">Cancel</button><button id="save-node" class="primary-button" value="save">Save node</button></div>
+    </form>
+  </dialog>
+  <dialog id="settings-dialog" class="modal settings-modal">
+    <form id="settings-form" method="dialog">
+      <div class="modal-heading"><div><span class="eyebrow">CONNECTION</span><h2>AI and server settings</h2></div><button class="icon-button close-dialog" aria-label="Close">×</button></div>
+      <section class="concept-fields"><span class="eyebrow">EDITABLE WORKSHOP / PROJECT CONTEXT</span><label>Title<input id="workspace-title-input" maxlength="120" placeholder="Phone repair workshop, garden, or your own idea"></label><label>Description for the assistant and search<textarea id="workspace-description-input" rows="3" maxlength="2000" placeholder="Describe this workshop or project and what its map is for."></textarea></label><label class="publish-choice"><input id="publish-enabled" type="checkbox"><span><b>Publish this map to public discovery</b><small>Other MeshMap users can search and read it. Map structure is read-only to them; they can add node comments.</small></span></label><p class="field-note public-warning">Maps have no private access control. MQTT account access is required, but subscribers can read published content. Do not publish personal or confidential information.</p><div class="network-credential-fields"><span class="eyebrow">DISCOVERY NETWORK LOGIN</span><label>MQTT username<input id="mqtt-username" autocomplete="username" placeholder="Same login as MeshBook"></label><label>MQTT password<input id="mqtt-password" type="password" autocomplete="current-password" placeholder="Stored in Windows Credential Manager"></label><button id="save-network-credentials" type="button" class="quiet-button">Save credentials and reconnect</button><p id="network-credential-status" class="field-note">Existing MESHBOOK_MQTT_USER and MESHBOOK_MQTT_PASS environment variables are also supported.</p></div></section>
+      <fieldset><legend>Provider</legend><label class="radio-row"><input type="radio" name="provider" value="deepseek"><span><b>DeepSeek API</b><small>Cloud model. Requires an API key and internet access.</small></span></label><label class="radio-row"><input type="radio" name="provider" value="local"><span><b>Local GGUF</b><small>Uses your own model and llama-server on this computer.</small></span></label></fieldset>
+      <div id="deepseek-settings" class="provider-fields"><label>DeepSeek API key<input id="deepseek-key" type="password" autocomplete="new-password" placeholder="Stored in Windows Credential Manager"></label><label>Model name<input id="deepseek-model" value="deepseek-flash"></label><p class="field-note">Your key is stored in the operating-system credential store, not in map data or settings.yaml.</p></div>
+      <div id="local-settings" class="provider-fields"><label>llama-server executable path<input id="server-path" placeholder="C:\\path\\to\\llama-server.exe"></label><label>GGUF model path<input id="model-path" placeholder="C:\\models\\your-model.gguf"></label><div class="field-row"><label>Server port<input id="local-port" type="number" min="1" max="65535" value="8080"></label><label>Context size<input id="context-size" type="number" min="512" step="512" value="4096"></label><label>GPU layers<input id="gpu-layers" type="number" min="0" value="99"></label></div><div class="server-actions"><button id="start-server" type="button" class="primary-button">Start local server</button><button id="stop-server" type="button" class="quiet-button">Stop</button><span id="server-status" class="server-status">Not checked</span></div><p class="field-note">Model files stay where they are. Settings are saved in your user profile.</p></div>
+      <div class="modal-actions"><button type="button" class="quiet-button close-dialog">Cancel</button><button id="save-settings" class="primary-button" value="save">Save settings</button></div>
+    </form>
+  </dialog>
+  <dialog id="network-dialog" class="modal network-modal">
+    <div class="modal-heading"><div><span class="eyebrow">PUBLIC DISCOVERY</span><h2>Find a workshop or project</h2></div><button class="icon-button close-dialog" aria-label="Close">×</button></div>
+    <p id="network-status-detail" class="diagnostic-intro">Connecting to the discovery network…</p>
+    <label class="network-search">Search titles, descriptions, and node details<input id="network-search" type="search" placeholder="Try LCD repair, gardening, spare parts…"></label>
+    <div id="network-results" class="network-results"><p class="assistant-note">Searches maps currently shared through the public discovery network.</p></div>
+    <div class="modal-actions"><button class="primary-button close-dialog">Done</button></div>
+  </dialog>
+  <dialog id="diagnostics-dialog" class="modal diagnostics-modal">
+    <div class="modal-heading"><div><span class="eyebrow">LOCAL GGUF</span><h2>Server diagnostics</h2></div><button class="icon-button close-dialog" aria-label="Close">×</button></div>
+    <p class="diagnostic-intro">These checks help isolate path, port, model, runtime, and GPU issues. The server log is stored locally.</p>
+    <div id="diagnostic-checks" class="diagnostic-checks"></div>
+    <div id="diagnostic-hints" class="diagnostic-hints"></div>
+    <details class="log-details"><summary>Recent server log</summary><pre id="server-log">No server log yet.</pre></details>
+    <div class="modal-actions"><button id="run-diagnostics" class="quiet-button">Run checks again</button><button class="primary-button close-dialog">Done</button></div>
+  </dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
